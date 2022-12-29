@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+  environment {
+  PATH = "/opt/maven/bin:$PATH"
+    }
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello World'
+            }
+        }
+        stage('checkout'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/dev']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Bhanukiran213/hello-world-war.git']]])
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('Artifactory uploaqd'){
+         steps{
+          script{
+              def mavenPom = readMavenPom file: 'pom.xml'
+             nexusArtifactUploader artifacts: 
+             [
+                 [
+                     artifactId: 'hello-world-war',
+                     classifier: '', 
+                     file: "target/hello-world-war-${mavenPom.version}.war", 
+                     type: 'war'
+                     ]
+                     ],
+                     credentialsId: 'nexus--cred',
+                     groupId: 'com.efsavage', 
+                     nexusUrl: '65.2.123.62:8081', 
+                     nexusVersion: 'nexus3',
+                     protocol: 'http', 
+                     repository: 'learndevops', 
+                     version: "${mavenPom.version}"
+          }   
+          
+         }    
+        }
+        stage('Deploy'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat--cred', path: '', url: 'http://3.110.175.252:8080')], contextPath: 'app', war: '**/*.war'
+            }
+        }
+    }
+}
