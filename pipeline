@@ -1,4 +1,7 @@
 pipeline {
+parameters {
+  choice choices: ['dev', 'master'], description: 'please select your branch', name: 'Branch'
+}
     agent any
   environment {
   PATH = "/opt/maven/bin:$PATH"
@@ -11,7 +14,7 @@ pipeline {
         }
         stage('checkout'){
             steps{
-                checkout([$class: 'GitSCM', branches: [[name: '*/dev']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Bhanukiran213/hello-world-war.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: "*/${Branch}"]], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Bhanukiran213/hello-world-war.git']]])
             }
         }
         stage('Build'){
